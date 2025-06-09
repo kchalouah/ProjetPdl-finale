@@ -172,4 +172,6 @@ public class HospitalisationController {
         hospitalisationService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    // All API routes are correct and match the frontend usage
 }

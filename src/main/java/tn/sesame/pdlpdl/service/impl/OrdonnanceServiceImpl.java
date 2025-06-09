@@ -2,6 +2,7 @@ package tn.sesame.pdlpdl.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tn.sesame.pdlpdl.model.entities.Consultation;
 import tn.sesame.pdlpdl.model.entities.Ordonnance;
 import tn.sesame.pdlpdl.repository.OrdonnanceRepository;
 import tn.sesame.pdlpdl.service.IOrdonnanceService;
@@ -42,5 +43,10 @@ public class OrdonnanceServiceImpl implements IOrdonnanceService {
     @Override
     public boolean existsById(Long id) {
         return ordonnanceRepository.existsById(id);
+    }
+
+    @Override
+    public List<Ordonnance> findByConsultations(List<Consultation> consultations) {
+        return ordonnanceRepository.findByConsultationIn(consultations);
     }
 }

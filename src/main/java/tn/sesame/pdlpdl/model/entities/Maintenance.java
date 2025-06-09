@@ -1,5 +1,6 @@
 package tn.sesame.pdlpdl.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -53,10 +54,12 @@ public class Maintenance {
     // Relations
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipement_id", nullable = false)
+    @JsonIgnore // Prevent infinite recursion during JSON serialization
     private Equipement equipement;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "technicien_id", nullable = false)
+    @JsonIgnore // Prevent infinite recursion during JSON serialization
     private Utilisateur technicien;
 
     @PreUpdate

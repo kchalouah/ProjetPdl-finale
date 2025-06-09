@@ -43,4 +43,9 @@ public class PatientServiceImpl implements IPatientService {
     public boolean existsById(Long id) {
         return patientRepository.existsById(id);
     }
+
+    @Override
+    public Optional<Patient> findByEmail(String email) {
+        return patientRepository.findByEmail(email);
+    }
 }

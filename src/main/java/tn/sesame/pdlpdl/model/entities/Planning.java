@@ -6,14 +6,9 @@ import tn.sesame.pdlpdl.model.enums.JourEnum;
 
 import java.time.LocalTime;
 
-/**
- * Classe représentant un planning de travail pour le personnel soignant dans le système DMIC.
- * Un planning définit les horaires de travail pour un jour spécifique.
- */
 @Getter
 @Setter
 @Entity
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -34,6 +29,18 @@ public class Planning {
     private LocalTime heureFin;
 
     @ManyToOne
-    @JoinColumn(name = "utilisateur_id", nullable = false)
-    private Utilisateur utilisateur;
+    @JoinColumn(name = "medecin_id")
+    private Medecin medecin;
+
+    @ManyToOne
+    @JoinColumn(name = "infirmier_id")
+    private Infirmier infirmier;
+
+    @ManyToOne
+    @JoinColumn(name = "technicien_id")
+    private Technicien technicien;
+
+    @ManyToOne
+    @JoinColumn(name = "service_id")
+    private Service service;
 }

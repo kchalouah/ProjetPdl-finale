@@ -106,7 +106,7 @@ public class EquipementController {
     }
 
     // PUT: Modifier un équipement
-    @PutMapping("/{id}")
+    @PutMapping("/modifier/{id}")
     public ResponseEntity<Equipement> updateEquipement(@PathVariable Long id, @RequestBody Equipement equipement) {
         if (!equipementService.existsById(id)) {
             return ResponseEntity.notFound().build();

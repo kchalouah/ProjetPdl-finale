@@ -35,9 +35,22 @@ interface User {
   blocId?: string
 }
 
+interface Service {
+  id: number
+  nom: string
+}
+
+interface Bloc {
+  id: number
+  numero: string
+  service: Service
+}
+
 export default function UsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
+  const [services, setServices] = useState<Service[]>([])
+  const [blocs, setBlocs] = useState<Bloc[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedRole, setSelectedRole] = useState("ALL")
@@ -99,6 +112,8 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers()
+    fetchServices()
+    fetchBlocs()
   }, [])
 
   useEffect(() => {
@@ -115,6 +130,26 @@ export default function UsersPage() {
       console.error("Erreur lors du chargement des utilisateurs:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch("/api/service/afficherservices")
+      const data = await response.json()
+      setServices(data)
+    } catch (error) {
+      console.error("Erreur lors du chargement des services:", error)
+    }
+  }
+
+  const fetchBlocs = async () => {
+    try {
+      const response = await fetch("/api/bloc/afficherblocs")
+      const data = await response.json()
+      setBlocs(data)
+    } catch (error) {
+      console.error("Erreur lors du chargement des blocs:", error)
     }
   }
 
@@ -149,7 +184,7 @@ export default function UsersPage() {
       }
 
       // Préparation des données selon le type d'utilisateur
-      const userData: any = {
+      let userData: any = {
         nom: formData.nom.trim(),
         prenom: formData.prenom.trim(),
         email: formData.email.trim(),
@@ -157,41 +192,55 @@ export default function UsersPage() {
         role: formData.role,
       }
 
-      // Add role-specific fields
-      if (formData.role === "MEDECIN" && formData.specialite) {
-        userData.specialite = formData.specialite
-      } else if (formData.role === "PATIENT") {
-        // Ensure date is in yyyy-MM-dd format
-        if (formData.dateNaissance) {
-          // Format the date properly
-          const dateParts = formData.dateNaissance.split("-")
-          if (dateParts.length === 3) {
-            // Already in yyyy-MM-dd format
-            userData.dateNaissance = formData.dateNaissance
-          } else {
-            // Try to parse and format the date
-            const date = new Date(formData.dateNaissance)
-            if (!isNaN(date.getTime())) {
-              userData.dateNaissance = date.toISOString().split("T")[0]
-            } else {
-              alert("Format de date invalide. Utilisez le format YYYY-MM-DD.")
-              setLoading(false)
-              return
-            }
-          }
+      // Déterminer l'endpoint selon le rôle
+      let endpoint = ""
+
+      // Ajout des champs spécifiques selon le rôle
+      if (formData.role === "PATIENT") {
+        // Validation spécifique pour les patients
+        if (!formData.dateNaissance || !formData.adresse.trim() || !formData.telephone.trim()) {
+          throw new Error("Tous les champs du patient sont obligatoires")
         }
 
-        userData.adresse = formData.adresse.trim()
-        userData.telephone = formData.telephone.trim()
+        // Validation de la date
+        const birthDate = new Date(formData.dateNaissance)
+        if (isNaN(birthDate.getTime())) {
+          throw new Error("Date de naissance invalide")
+        }
+
+        userData = {
+          nom: formData.nom.trim(),
+          prenom: formData.prenom.trim(),
+          email: formData.email.trim(),
+          motDePasse: formData.motDePasse,
+          role: formData.role,
+          dateNaissance: formData.dateNaissance,
+          adresse: formData.adresse.trim(),
+          telephone: formData.telephone.trim(),
+          type: "patient",
+        }
+        endpoint = "/api/patients/creer"
+      } else if (formData.role === "MEDECIN") {
+        if (formData.specialite) {
+          userData.specialite = formData.specialite
+        }
+        userData.type = "medecin"
+        endpoint = "/api/medecin/ajoutermedecin"
       } else if (formData.role === "TECHNICIEN") {
-        if (formData.serviceId) userData.serviceId = formData.serviceId
-        if (formData.blocId) userData.blocId = formData.blocId
+        userData.serviceId = formData.serviceId ? Number.parseInt(formData.serviceId) : null
+        userData.blocId = formData.blocId ? Number.parseInt(formData.blocId) : null
+        userData.type = "technicien"
+        endpoint = "/api/techniciens/creer"
+      } else if (formData.role === "INFIRMIER") {
+        userData.serviceId = formData.serviceId ? Number.parseInt(formData.serviceId) : null
+        userData.type = "infirmier"
+        endpoint = "/api/infirmier/ajouterinfirmier"
+      } else if (formData.role === "ADMINISTRATEUR") {
+        userData.type = "administrateur"
+        endpoint = "/api/admin/ajouteradmin"
       }
 
-      // Use the unified UtilisateurController endpoint for all user types
-      let endpoint = "/api/utilisateurs/creer"
-
-      // If editing an existing user
+      // Si on édite un utilisateur existant
       if (editingUser) {
         endpoint = `/api/utilisateurs/modifier/${editingUser.id}`
       }
@@ -342,31 +391,22 @@ export default function UsersPage() {
       return (
           <>
             <div className="space-y-2">
-              <Label>Date de naissance (YYYY-MM-DD)</Label>
+              <Label>Date de naissance</Label>
               <Input
                   type="date"
                   value={formData.dateNaissance}
-                  onChange={(e) => {
-                    console.log("Date selected:", e.target.value)
-                    setFormData({ ...formData, dateNaissance: e.target.value })
-                  }}
-                  required
+                  onChange={(e) => setFormData({ ...formData, dateNaissance: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Adresse</Label>
-              <Input
-                  value={formData.adresse}
-                  onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-                  required
-              />
+              <Input value={formData.adresse} onChange={(e) => setFormData({ ...formData, adresse: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Téléphone</Label>
               <Input
                   value={formData.telephone}
                   onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                  required
               />
             </div>
           </>
@@ -375,17 +415,54 @@ export default function UsersPage() {
       return (
           <>
             <div className="space-y-2">
-              <Label>ID du service</Label>
-              <Input
-                  value={formData.serviceId}
-                  onChange={(e) => setFormData({ ...formData, serviceId: e.target.value })}
-              />
+              <Label>Service</Label>
+              <Select value={formData.serviceId} onValueChange={(v) => setFormData({ ...formData, serviceId: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                      <SelectItem key={service.id} value={service.id.toString()}>
+                        {service.nom}
+                      </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label>ID du bloc</Label>
-              <Input value={formData.blocId} onChange={(e) => setFormData({ ...formData, blocId: e.target.value })} />
+              <Label>Bloc</Label>
+              <Select value={formData.blocId} onValueChange={(v) => setFormData({ ...formData, blocId: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un bloc" />
+                </SelectTrigger>
+                <SelectContent>
+                  {blocs.map((bloc) => (
+                      <SelectItem key={bloc.id} value={bloc.id.toString()}>
+                        {bloc.numero} - {bloc.service?.nom}
+                      </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </>
+      )
+    } else if (formData.role === "INFIRMIER") {
+      return (
+          <div className="space-y-2">
+            <Label>Service</Label>
+            <Select value={formData.serviceId} onValueChange={(v) => setFormData({ ...formData, serviceId: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un service" />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
+                      {service.nom}
+                    </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
       )
     }
     return null
@@ -462,7 +539,6 @@ export default function UsersPage() {
                             blocId: "",
                           })
                       }
-                      required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un rôle" />

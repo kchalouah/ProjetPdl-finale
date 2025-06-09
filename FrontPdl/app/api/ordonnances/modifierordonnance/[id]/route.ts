@@ -5,7 +5,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const id = params.id
     const body = await request.json()
 
-    const response = await fetch(`http://localhost:8080/api/ordonnance/modifierordonnance/${id}`, {
+    const response = await fetch(`http://localhost:8080/api/ordonnances/modifierordonnance/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

@@ -20,25 +20,17 @@ public interface OrdonnanceRepository extends JpaRepository<Ordonnance, Long> {
      * @return la liste des ordonnances liées à cette consultation
      */
     List<Ordonnance> findByConsultation(Consultation consultation);
-    
+
+    List<Ordonnance> findByConsultationIn(List<Consultation> consultations);
+
     /**
      * Recherche toutes les ordonnances émises après une date spécifique.
      * @param date la date minimale
      * @return la liste des ordonnances émises après cette date
      */
-    List<Ordonnance> findByDateHeureAfter(Date date);
-    
-    /**
-     * Recherche toutes les ordonnances contenant des prescriptions spécifiques.
-     * @param keyword le mot-clé recherché dans les prescriptions
-     * @return la liste des ordonnances correspondantes
-     */
-    List<Ordonnance> findByPrescriptionsContaining(String keyword);
-    
-    /**
-     * Recherche toutes les ordonnances ayant une durée de traitement supérieure à une valeur.
-     * @param duree la durée minimale du traitement
-     * @return la liste des ordonnances correspondantes
-     */
-    List<Ordonnance> findByDureeTraitementGreaterThan(Integer duree);
+    List<Ordonnance> findByDatePrescriptionAfter(Date date);
+
+    // Supprimé : prescriptions et dureeTraitement n'existent pas dans l'entité Ordonnance
+    // List<Ordonnance> findByPrescriptionsContaining(String keyword);
+    // List<Ordonnance> findByDureeTraitementGreaterThan(Integer duree);
 }

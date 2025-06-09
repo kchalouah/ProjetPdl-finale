@@ -1070,7 +1070,6 @@ export default function EquipementsPage() {
                     <TableHead>Équipement</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>Technicien</TableHead>
                     <TableHead>Résultat</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -1088,7 +1087,6 @@ export default function EquipementsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-xs truncate">{maintenance.description}</TableCell>
-                        <TableCell>{maintenance.technicien}</TableCell>
                         <TableCell>
                           <Badge className={resultatBadge.color}>{resultatBadge.label}</Badge>
                         </TableCell>

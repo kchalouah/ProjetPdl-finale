@@ -34,4 +34,6 @@ public interface DiagnosticRepository extends JpaRepository<Diagnostic, Long> {
      * @return la liste des diagnostics correspondants
      */
     List<Diagnostic> findByDescriptionContaining(String keyword);
+
+    List<Diagnostic> findByConsultationIn(List<Consultation> consultations);
 }

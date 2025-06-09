@@ -3,14 +3,22 @@ import { type NextRequest, NextResponse } from "next/server"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const { consultation_id, prescriptions, ...rest } = body
 
-    const response = await fetch("http://localhost:8080/api/ordonnance/ajouterordonnance", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    })
+    if (!consultation_id || !prescriptions) {
+      return NextResponse.json({ message: "consultation_id et prescriptions sont requis" }, { status: 400 })
+    }
+
+    const response = await fetch(
+      `http://localhost:8080/api/ordonnances/ajouterordonnance?consultationId=${consultation_id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...rest, prescriptions }),
+      }
+    )
 
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`)

@@ -2,6 +2,7 @@ package tn.sesame.pdlpdl.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import tn.sesame.pdlpdl.model.entities.Medecin;
 import tn.sesame.pdlpdl.service.IMedecinService;
@@ -13,10 +14,12 @@ import java.util.List;
 public class MedecinController {
 
     private final IMedecinService medecinService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public MedecinController(IMedecinService medecinService) {
+    public MedecinController(IMedecinService medecinService, PasswordEncoder passwordEncoder) {
         this.medecinService = medecinService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/affichermedecins")
@@ -33,6 +36,14 @@ public class MedecinController {
 
     @PostMapping("/ajoutermedecin")
     public ResponseEntity<Medecin> create(@RequestBody Medecin entity) {
+        if (entity.getMotDePasse() != null && !entity.getMotDePasse().trim().isEmpty()) {
+            String pwd = entity.getMotDePasse();
+            if (!(pwd.startsWith("$2a$") || pwd.startsWith("$2b$") || pwd.startsWith("$2y$"))) {
+                entity.setMotDePasse(passwordEncoder.encode(pwd));
+            } else {
+                entity.setMotDePasse(pwd);
+            }
+        }
         return ResponseEntity.ok(medecinService.save(entity));
     }
 
@@ -40,6 +51,14 @@ public class MedecinController {
     public ResponseEntity<Medecin> update(@PathVariable Long id, @RequestBody Medecin entity) {
         if (!medecinService.existsById(id)) {
             return ResponseEntity.notFound().build();
+        }
+        if (entity.getMotDePasse() != null && !entity.getMotDePasse().trim().isEmpty()) {
+            String pwd = entity.getMotDePasse();
+            if (!(pwd.startsWith("$2a$") || pwd.startsWith("$2b$") || pwd.startsWith("$2y$"))) {
+                entity.setMotDePasse(passwordEncoder.encode(pwd));
+            } else {
+                entity.setMotDePasse(pwd);
+            }
         }
         entity.setId(id);
         return ResponseEntity.ok(medecinService.save(entity));

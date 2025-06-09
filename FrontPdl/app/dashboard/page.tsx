@@ -94,9 +94,7 @@ export default function Dashboard() {
             icon: Building,
             description: "Services, blocs et chambres",
           },
-          { title: "Planning Personnel", href: "/planning", icon: Calendar, description: "Organiser les horaires" },
           { title: "Hospitalisations", href: "/hospitalisations", icon: Hospital, description: "Gérer les admissions" },
-          { title: "Dossiers Médicaux", href: "/dossiers", icon: FileText, description: "Accès aux dossiers patients" },
           {
             title: "Consultations",
             href: "/consultations",
@@ -105,6 +103,8 @@ export default function Dashboard() {
           },
           { title: "Diagnostics", href: "/diagnostics", icon: ClipboardList, description: "Tous les diagnostics" },
           { title: "Ordonnances", href: "/ordonnances", icon: FileText, description: "Toutes les ordonnances" },
+          { title: "Maintenance", href: "/maintenance", icon: Settings, description: "Gestion de la maintenance" },
+          { title: "Équipements", href: "/equipements", icon: Settings, description: "Gestion des équipements" },
         ]
 
       case "MEDECIN":
@@ -116,7 +116,6 @@ export default function Dashboard() {
             icon: Stethoscope,
             description: "Gérer mes consultations",
           },
-          { title: "Dossiers Patients", href: "/dossiers", icon: FileText, description: "Consulter les dossiers" },
           { title: "Diagnostics", href: "/diagnostics", icon: ClipboardList, description: "Mes diagnostics" },
           { title: "Ordonnances", href: "/ordonnances", icon: FileText, description: "Prescrire des traitements" },
         ]
@@ -124,17 +123,13 @@ export default function Dashboard() {
       case "INFIRMIER":
         return [
           ...baseItems,
-          { title: "Dossiers Patients", href: "/dossiers", icon: FileText, description: "Consulter les dossiers" },
           { title: "Consultations", href: "/consultations", icon: Stethoscope, description: "Voir les consultations" },
-          { title: "Planning", href: "/planning", icon: Calendar, description: "Mon planning de travail" },
         ]
 
       case "TECHNICIEN":
         return [
           ...baseItems,
-          { title: "Dossiers Patients", href: "/dossiers", icon: FileText, description: "Consulter les dossiers" },
           { title: "Consultations", href: "/consultations", icon: Stethoscope, description: "Voir les consultations" },
-          { title: "Planning", href: "/planning", icon: Calendar, description: "Mon planning de travail" },
           {
             title: "Équipements",
             href: "/equipements",

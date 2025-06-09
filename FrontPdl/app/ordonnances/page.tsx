@@ -28,6 +28,7 @@ interface Ordonnance {
   consultation_id: number
   medicaments: string
   instructions: string
+  prescriptions: string
   date_prescription: string
 }
 
@@ -51,6 +52,7 @@ export default function OrdonnancesPage() {
     consultation_id: "",
     medicaments: "",
     instructions: "",
+    prescriptions: "",
   })
 
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function OrdonnancesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.consultation_id || !formData.medicaments || !formData.instructions) {
+    if (!formData.consultation_id || !formData.medicaments || !formData.instructions || !formData.prescriptions) {
       alert("Veuillez remplir tous les champs.")
       return
     }
@@ -112,6 +114,7 @@ export default function OrdonnancesPage() {
         consultation_id: Number.parseInt(formData.consultation_id),
         medicaments: formData.medicaments,
         instructions: formData.instructions,
+        prescriptions: formData.prescriptions,
       }
 
       const response = await fetch(
@@ -159,6 +162,7 @@ export default function OrdonnancesPage() {
       consultation_id: ordonnance.consultation_id.toString(),
       medicaments: ordonnance.medicaments,
       instructions: ordonnance.instructions,
+      prescriptions: ordonnance.prescriptions,
     })
     setIsDialogOpen(true)
   }
@@ -168,6 +172,7 @@ export default function OrdonnancesPage() {
       consultation_id: "",
       medicaments: "",
       instructions: "",
+      prescriptions: "",
     })
     setEditingOrdonnance(null)
   }
@@ -251,6 +256,17 @@ export default function OrdonnancesPage() {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="prescriptions">Prescriptions</Label>
+                <Textarea
+                  id="prescriptions"
+                  placeholder="Détail des prescriptions..."
+                  value={formData.prescriptions}
+                  onChange={(e) => setFormData({ ...formData, prescriptions: e.target.value })}
+                  rows={3}
+                  required
+                />
+              </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Annuler
@@ -290,6 +306,7 @@ export default function OrdonnancesPage() {
                 <TableHead>Consultation</TableHead>
                 <TableHead>Médicaments</TableHead>
                 <TableHead>Instructions</TableHead>
+                <TableHead>Prescriptions</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -321,6 +338,7 @@ export default function OrdonnancesPage() {
                       </div>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">{ordonnance.instructions}</TableCell>
+                    <TableCell className="max-w-xs truncate">{ordonnance.prescriptions}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />

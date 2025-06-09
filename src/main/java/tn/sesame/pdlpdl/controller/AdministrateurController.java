@@ -2,6 +2,7 @@ package tn.sesame.pdlpdl.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import tn.sesame.pdlpdl.model.entities.Administrateur;
 import tn.sesame.pdlpdl.service.IAdministrateurService;
@@ -13,10 +14,12 @@ import java.util.List;
 public class AdministrateurController {
 
     private final IAdministrateurService administrateurService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdministrateurController(IAdministrateurService administrateurService) {
+    public AdministrateurController(IAdministrateurService administrateurService, PasswordEncoder passwordEncoder) {
         this.administrateurService = administrateurService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // GET: afficher tous les admins
@@ -36,6 +39,14 @@ public class AdministrateurController {
     // POST: ajouter un admin
     @PostMapping("/ajouteradmin")
     public ResponseEntity<Administrateur> create(@RequestBody Administrateur entity) {
+        if (entity.getMotDePasse() != null && !entity.getMotDePasse().trim().isEmpty()) {
+            String pwd = entity.getMotDePasse();
+            if (!(pwd.startsWith("$2a$") || pwd.startsWith("$2b$") || pwd.startsWith("$2y$"))) {
+                entity.setMotDePasse(passwordEncoder.encode(pwd));
+            } else {
+                entity.setMotDePasse(pwd);
+            }
+        }
         return ResponseEntity.ok(administrateurService.save(entity));
     }
 
@@ -44,6 +55,14 @@ public class AdministrateurController {
     public ResponseEntity<Administrateur> update(@PathVariable Long id, @RequestBody Administrateur entity) {
         if (!administrateurService.existsById(id)) {
             return ResponseEntity.notFound().build();
+        }
+        if (entity.getMotDePasse() != null && !entity.getMotDePasse().trim().isEmpty()) {
+            String pwd = entity.getMotDePasse();
+            if (!(pwd.startsWith("$2a$") || pwd.startsWith("$2b$") || pwd.startsWith("$2y$"))) {
+                entity.setMotDePasse(passwordEncoder.encode(pwd));
+            } else {
+                entity.setMotDePasse(pwd);
+            }
         }
         entity.setId(id);
         return ResponseEntity.ok(administrateurService.save(entity));

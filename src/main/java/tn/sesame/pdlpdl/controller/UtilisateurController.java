@@ -188,7 +188,14 @@ public class UtilisateurController {
             utilisateur.setEmail(email.trim());
             utilisateur.setNom(nom.trim());
             utilisateur.setPrenom(prenom.trim());
-            utilisateur.setMotDePasse(passwordEncoder.encode(motDePasse));
+            // Always hash password unless already a valid BCrypt hash
+            if (motDePasse != null && !motDePasse.trim().isEmpty()) {
+                if (!(motDePasse.startsWith("$2a$") || motDePasse.startsWith("$2b$") || motDePasse.startsWith("$2y$"))) {
+                    utilisateur.setMotDePasse(passwordEncoder.encode(motDePasse));
+                } else {
+                    utilisateur.setMotDePasse(motDePasse);
+                }
+            }
             utilisateur.setRole(RoleEnum.valueOf(role.toUpperCase()));
 
             System.out.println("Creating user: " + utilisateur.getClass().getSimpleName() + " with email: " + email);
@@ -239,9 +246,10 @@ public class UtilisateurController {
             if (userData.containsKey("motDePasse") && userData.get("motDePasse") != null) {
                 String rawPassword = (String) userData.get("motDePasse");
                 if (!rawPassword.trim().isEmpty()) {
-                    // Only encrypt if it's not already encrypted
-                    if (!rawPassword.startsWith("$2a$")) {
+                    if (!(rawPassword.startsWith("$2a$") || rawPassword.startsWith("$2b$") || rawPassword.startsWith("$2y$"))) {
                         existingUser.setMotDePasse(passwordEncoder.encode(rawPassword));
+                    } else {
+                        existingUser.setMotDePasse(rawPassword);
                     }
                 }
             }

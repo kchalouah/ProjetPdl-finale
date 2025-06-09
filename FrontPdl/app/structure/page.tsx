@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit, Trash2, ArrowLeft, Building, Home, Bed } from "lucide-react"
@@ -64,6 +64,14 @@ export default function StructurePage() {
     fetchData()
   }, [])
 
+  // When services are loaded, reload blocs to resolve service names if needed
+  useEffect(() => {
+    if (services.length > 0) {
+      fetchBlocs()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [services])
+
   const fetchData = async () => {
     await Promise.all([fetchServices(), fetchBlocs(), fetchChambres()])
   }
@@ -94,20 +102,28 @@ export default function StructurePage() {
 
   const fetchBlocs = async () => {
     try {
-      // ✅ CORRECTION: Endpoint correct du backend
       const response = await fetch("/api/bloc/afficherblocs")
       if (!response.ok) {
         throw new Error("Erreur lors du chargement des blocs")
       }
       const data = await response.json()
 
-      const formattedBlocs: Bloc[] = data.map((bloc: any) => ({
-        id: bloc.id,
-        numero: bloc.numero || "",
-        serviceId: bloc.service?.id || 0,
-        serviceName: bloc.service?.nom || "Service inconnu",
-        chambresCount: bloc.chambres?.length || 0,
-      }))
+      const formattedBlocs: Bloc[] = data.map((bloc: any) => {
+        let serviceId = bloc.service?.id || bloc.serviceId || 0
+        let serviceName = bloc.service?.nom
+        // Always resolve serviceName from services list if missing
+        if ((!serviceName || serviceName === "Service inconnu") && serviceId && services.length > 0) {
+          const found = services.find(s => s.id === serviceId)
+          serviceName = found ? found.nom : "Service inconnu"
+        }
+        return {
+          id: bloc.id,
+          numero: bloc.numero || "",
+          serviceId,
+          serviceName: serviceName || "Service inconnu",
+          chambresCount: bloc.chambres?.length || 0,
+        }
+      })
 
       setBlocs(formattedBlocs)
     } catch (error) {
@@ -117,21 +133,41 @@ export default function StructurePage() {
 
   const fetchChambres = async () => {
     try {
-      // ✅ CORRECTION: Endpoint correct du backend
       const response = await fetch("/api/chambre/afficherchambres")
       if (!response.ok) {
         throw new Error("Erreur lors du chargement des chambres")
       }
       const data = await response.json()
 
-      const formattedChambres: Chambre[] = data.map((chambre: any) => ({
-        id: chambre.id,
-        numero: chambre.numero || "",
-        capacite: chambre.capacite || 0,
-        blocId: chambre.bloc?.id || 0,
-        blocNumero: chambre.bloc?.numero || "Bloc inconnu",
-        serviceName: chambre.bloc?.service?.nom || "Service inconnu",
-      }))
+      const formattedChambres: Chambre[] = data.map((chambre: any) => {
+        // Try to get bloc info from chambre.bloc, fallback to blocs list if missing
+        let blocId = chambre.bloc?.id || chambre.blocId || 0
+        let blocNumero = chambre.bloc?.numero
+        let serviceName = chambre.bloc?.service?.nom
+
+        // Resolve blocNumero and serviceName from blocs/services if missing
+        if ((!blocNumero || blocNumero === "Bloc inconnu") && blocId && blocs.length > 0) {
+          const foundBloc = blocs.find(b => b.id === blocId)
+          blocNumero = foundBloc ? foundBloc.numero : "Bloc inconnu"
+          if (!serviceName && foundBloc && foundBloc.serviceId && services.length > 0) {
+            const foundService = services.find(s => s.id === foundBloc.serviceId)
+            serviceName = foundService ? foundService.nom : "Service inconnu"
+          }
+        }
+        if ((!serviceName || serviceName === "Service inconnu") && chambre.bloc?.service?.id && services.length > 0) {
+          const foundService = services.find(s => s.id === chambre.bloc.service.id)
+          serviceName = foundService ? foundService.nom : "Service inconnu"
+        }
+
+        return {
+          id: chambre.id,
+          numero: chambre.numero || "",
+          capacite: chambre.capacite || 0,
+          blocId,
+          blocNumero: blocNumero || "Bloc inconnu",
+          serviceName: serviceName || "Service inconnu",
+        }
+      })
 
       setChambres(formattedChambres)
     } catch (error) {
@@ -222,16 +258,27 @@ export default function StructurePage() {
   // Bloc handlers
   const handleBlocSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!blocForm.numero.trim()) {
+      alert("Veuillez saisir le numéro du bloc.")
+      return
+    }
+    if (!blocForm.serviceId) {
+      alert("Veuillez sélectionner un service.")
+      return
+    }
     setLoading(true)
-
     try {
       const blocData = {
         numero: blocForm.numero,
       }
+      // Debug: log what will be sent
+      console.log("Sending to /api/bloc/ajouterbloc:", {
+        blocData,
+        serviceId: blocForm.serviceId,
+      })
 
       let response
       if (editingBloc) {
-        // ✅ CORRECTION: Endpoint correct du backend avec paramètre
         response = await fetch(`/api/bloc/modifierbloc/${editingBloc.id}?serviceId=${blocForm.serviceId}`, {
           method: "PUT",
           headers: {
@@ -240,7 +287,6 @@ export default function StructurePage() {
           body: JSON.stringify(blocData),
         })
       } else {
-        // ✅ CORRECTION: Endpoint correct du backend avec paramètre
         response = await fetch(`/api/bloc/ajouterbloc?serviceId=${blocForm.serviceId}`, {
           method: "POST",
           headers: {
@@ -250,6 +296,9 @@ export default function StructurePage() {
         })
       }
 
+      // Debug: log backend response
+      const text = await response.text()
+      console.log("Backend response:", text)
       if (!response.ok) {
         throw new Error("Erreur lors de la sauvegarde")
       }
@@ -305,6 +354,11 @@ export default function StructurePage() {
     setLoading(true)
 
     try {
+      if (!chambreForm.blocId) {
+        alert("Veuillez sélectionner un bloc.")
+        setLoading(false)
+        return
+      }
       const chambreData = {
         numero: chambreForm.numero,
         capacite: Number.parseInt(chambreForm.capacite),
@@ -312,7 +366,6 @@ export default function StructurePage() {
 
       let response
       if (editingChambre) {
-        // ✅ CORRECTION: Endpoint correct du backend avec paramètre
         response = await fetch(`/api/chambre/modifierchambre/${editingChambre.id}?blocId=${chambreForm.blocId}`, {
           method: "PUT",
           headers: {
@@ -321,7 +374,6 @@ export default function StructurePage() {
           body: JSON.stringify(chambreData),
         })
       } else {
-        // ✅ CORRECTION: Endpoint correct du backend avec paramètre
         response = await fetch(`/api/chambre/ajouterchambre?blocId=${chambreForm.blocId}`, {
           method: "POST",
           headers: {
@@ -465,6 +517,11 @@ export default function StructurePage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>{editingService ? "Modifier le service" : "Nouveau service"}</DialogTitle>
+                      <DialogDescription>
+                        {editingService
+                          ? "Modifiez les informations du service hospitalier."
+                          : "Ajoutez un nouveau service hospitalier."}
+                      </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleServiceSubmit}>
                       <div className="grid gap-4 py-4">
@@ -565,8 +622,22 @@ export default function StructurePage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>{editingBloc ? "Modifier le bloc" : "Nouveau bloc"}</DialogTitle>
+                      <DialogDescription>
+                        {editingBloc
+                          ? "Modifiez les informations du bloc hospitalier."
+                          : "Ajoutez un nouveau bloc hospitalier."}
+                      </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleBlocSubmit}>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        if (!blocForm.serviceId) {
+                          alert("Veuillez sélectionner un service.")
+                          return
+                        }
+                        handleBlocSubmit(e)
+                      }}
+                    >
                       <div className="grid gap-4 py-4">
                         <div className="space-y-2">
                           <Label htmlFor="blocNumero">Numéro du bloc</Label>
@@ -584,7 +655,7 @@ export default function StructurePage() {
                           <Select
                             value={blocForm.serviceId}
                             onValueChange={(value) => setBlocForm({ ...blocForm, serviceId: value })}
-                            disabled={loading || !!editingBloc}
+                            disabled={loading /* Only disable on loading */}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Sélectionner un service" />
@@ -686,6 +757,11 @@ export default function StructurePage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>{editingChambre ? "Modifier la chambre" : "Nouvelle chambre"}</DialogTitle>
+                      <DialogDescription>
+                        {editingChambre
+                          ? "Modifiez les informations de la chambre."
+                          : "Ajoutez une nouvelle chambre au bloc sélectionné."}
+                      </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleChambreSubmit}>
                       <div className="grid gap-4 py-4">

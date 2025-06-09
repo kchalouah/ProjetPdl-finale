@@ -39,7 +39,7 @@ interface Service {
 
 interface Bloc {
   id: number
-  nom: string
+  numero: string
 }
 
 interface Chambre {
@@ -163,7 +163,13 @@ export default function HospitalisationsPage() {
       const data = await response.json()
       console.log("Blocs récupérés:", data)
 
-      setBlocs(data)
+      // Map to expected structure
+      setBlocs(
+        data.map((bloc: any) => ({
+          id: bloc.id,
+          numero: bloc.numero || "",
+        }))
+      )
     } catch (error) {
       console.error("Erreur lors de la récupération des blocs:", error)
     }
@@ -448,7 +454,7 @@ export default function HospitalisationsPage() {
                     <SelectContent>
                       {blocs.map((bloc) => (
                         <SelectItem key={bloc.id} value={bloc.id.toString()}>
-                          {bloc.nom}
+                          {bloc.numero}
                         </SelectItem>
                       ))}
                     </SelectContent>

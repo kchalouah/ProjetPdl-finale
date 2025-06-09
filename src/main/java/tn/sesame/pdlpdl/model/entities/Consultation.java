@@ -33,12 +33,17 @@ public class Consultation {
     private String actesRealises;
 
     @ManyToOne
-    @JoinColumn(name = "medecin_id", nullable = false)
+    @JoinColumn(name = "medecin_id", nullable = true)
     private Medecin medecin;
 
     @ManyToOne
-    @JoinColumn(name = "dossier_medical_id", nullable = false)
+    @JoinColumn(name = "dossier_medical_id", nullable = true)
     private DossierMedical dossierMedical;
+
+    @ManyToOne
+    @JoinColumn(name = "patient_id", nullable = true)
+
+    private Patient patient;
 
     // Les diagnostics sont gérés par la classe Diagnostic avec une relation ManyToOne vers Consultation
 

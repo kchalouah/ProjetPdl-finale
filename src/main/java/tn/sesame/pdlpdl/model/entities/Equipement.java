@@ -1,5 +1,6 @@
 package tn.sesame.pdlpdl.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -59,7 +60,8 @@ public class Equipement {
 
     // Relations
     @OneToMany(mappedBy = "equipement", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Maintenance> maintenances;
+    @JsonIgnore // Prevent infinite recursion during JSON serialization
+    private java.util.List<Maintenance> maintenances;
 
     @PreUpdate
     public void preUpdate() {

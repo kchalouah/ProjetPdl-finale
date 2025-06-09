@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge"
 
 interface Diagnostic {
   id: number
-  date: string
+  date: string // Will be mapped from dateHeure
   description: string
   consultationId: number
 }
@@ -66,7 +66,13 @@ export default function DiagnosticsPage() {
       const response = await fetch("/api/diagnostic/afficherdiagnostics")
       if (!response.ok) throw new Error("Erreur lors du chargement des diagnostics")
       const data = await response.json()
-      setDiagnostics(data)
+      // Map dateHeure to date (YYYY-MM-DD)
+      const mapped = data.map((d: any) => ({
+        ...d,
+        date: d.dateHeure ? new Date(d.dateHeure).toISOString().slice(0, 10) : "",
+        consultationId: d.consultation?.id ?? d.consultationId,
+      }))
+      setDiagnostics(mapped)
     } catch (error) {
       console.error("Erreur lors du chargement des diagnostics:", error)
     } finally {
@@ -101,10 +107,15 @@ export default function DiagnosticsPage() {
     e.preventDefault()
     setLoading(true)
     try {
+      if (!formData.consultationId) {
+        alert("Veuillez sélectionner une consultation.")
+        setLoading(false)
+        return
+      }
       const diagnosticData = {
         date: formData.date,
         description: formData.description,
-        consultationId: Number.parseInt(formData.consultationId),
+        consultationId: Number(formData.consultationId),
       }
 
       const response = await fetch(
@@ -216,6 +227,7 @@ export default function DiagnosticsPage() {
                   <Select
                     value={formData.consultationId}
                     onValueChange={(value) => setFormData({ ...formData, consultationId: value })}
+                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une consultation" />
@@ -303,7 +315,9 @@ export default function DiagnosticsPage() {
                     <TableCell>
                       <div className="flex items-center">
                         <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {new Date(diagnostic.date).toLocaleDateString("fr-FR")}
+                        {diagnostic.date
+                          ? new Date(diagnostic.date).toLocaleDateString("fr-FR")
+                          : ""}
                       </div>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">{diagnostic.description}</TableCell>

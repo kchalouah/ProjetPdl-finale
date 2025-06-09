@@ -6,33 +6,28 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.sesame.pdlpdl.model.entities.Consultation;
-import tn.sesame.pdlpdl.model.entities.DossierMedical;
+import tn.sesame.pdlpdl.model.entities.Patient;
 import tn.sesame.pdlpdl.model.entities.Medecin;
 import tn.sesame.pdlpdl.service.IConsultationService;
-import tn.sesame.pdlpdl.service.IDossierMedicalService;
+import tn.sesame.pdlpdl.service.IPatientService;
 import tn.sesame.pdlpdl.service.IMedecinService;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Contrôleur REST pour la gestion des consultations médicales.
- */
 @RestController
 @RequestMapping("/api/consultations")
 public class ConsultationController {
 
     private final IConsultationService consultationService;
-    private final IDossierMedicalService dossierMedicalService;
+    private final IPatientService patientService;
     private final IMedecinService medecinService;
 
     @Autowired
-    public ConsultationController(IConsultationService consultationService,
-                                  IDossierMedicalService dossierMedicalService,
-                                  IMedecinService medecinService) {
+    public ConsultationController(IConsultationService consultationService, IPatientService patientService, IMedecinService medecinService) {
         this.consultationService = consultationService;
-        this.dossierMedicalService = dossierMedicalService;
+        this.patientService = patientService;
         this.medecinService = medecinService;
     }
 
@@ -48,10 +43,10 @@ public class ConsultationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/dossier/{dossierMedicalId}")
-    public ResponseEntity<List<Consultation>> getConsultationsByDossierMedical(@PathVariable Long dossierMedicalId) {
-        return dossierMedicalService.findById(dossierMedicalId)
-                .map(dossierMedical -> ResponseEntity.ok(consultationService.findByDossierMedical(dossierMedical)))
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<List<Consultation>> getConsultationsByPatient(@PathVariable Long patientId) {
+        return patientService.findById(patientId)
+                .map(patient -> ResponseEntity.ok(consultationService.findByPatient(patient)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -75,15 +70,15 @@ public class ConsultationController {
         return ResponseEntity.ok(consultationService.findByDateHeureBetween(debut, fin));
     }
 
-    @GetMapping("/medecin/{medecinId}/dossier/{dossierMedicalId}")
-    public ResponseEntity<List<Consultation>> getConsultationsByMedecinAndDossierMedical(
-            @PathVariable Long medecinId, @PathVariable Long dossierMedicalId) {
+    @GetMapping("/medecin/{medecinId}/patient/{patientId}")
+    public ResponseEntity<List<Consultation>> getConsultationsByMedecinAndPatient(
+            @PathVariable Long medecinId, @PathVariable Long patientId) {
         Optional<Medecin> medecinOpt = medecinService.findById(medecinId);
-        Optional<DossierMedical> dossierMedicalOpt = dossierMedicalService.findById(dossierMedicalId);
+        Optional<Patient> patientOpt = patientService.findById(patientId);
 
-        if (medecinOpt.isPresent() && dossierMedicalOpt.isPresent()) {
-            return ResponseEntity.ok(consultationService.findByMedecinAndDossierMedical(
-                    medecinOpt.get(), dossierMedicalOpt.get()));
+        if (medecinOpt.isPresent() && patientOpt.isPresent()) {
+            return ResponseEntity.ok(consultationService.findByMedecinAndPatient(
+                    medecinOpt.get(), patientOpt.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -93,13 +88,14 @@ public class ConsultationController {
     public ResponseEntity<Consultation> createConsultation(
             @RequestBody Consultation consultation,
             @RequestParam Long medecinId,
-            @RequestParam Long dossierMedicalId) {
-        Optional<Medecin> medecinOpt = medecinService.findById(medecinId);
-        Optional<DossierMedical> dossierMedicalOpt = dossierMedicalService.findById(dossierMedicalId);
+            @RequestParam Long patientId) {
 
-        if (medecinOpt.isPresent() && dossierMedicalOpt.isPresent()) {
+        Optional<Medecin> medecinOpt = medecinService.findById(medecinId);
+        Optional<Patient> patientOpt = patientService.findById(patientId);
+
+        if (medecinOpt.isPresent() && patientOpt.isPresent()) {
             consultation.setMedecin(medecinOpt.get());
-            consultation.setDossierMedical(dossierMedicalOpt.get());
+            consultation.setPatient(patientOpt.get());
             Consultation saved = consultationService.save(consultation);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } else {
@@ -112,7 +108,7 @@ public class ConsultationController {
             @PathVariable Long id,
             @RequestBody Consultation consultation,
             @RequestParam(required = false) Long medecinId,
-            @RequestParam(required = false) Long dossierMedicalId) {
+            @RequestParam(required = false) Long patientId) {
 
         if (!consultationService.existsById(id)) {
             return ResponseEntity.notFound().build();
@@ -127,22 +123,18 @@ public class ConsultationController {
 
         if (medecinId != null) {
             Optional<Medecin> medecinOpt = medecinService.findById(medecinId);
-            if (medecinOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
+            if (medecinOpt.isEmpty()) return ResponseEntity.notFound().build();
             consultation.setMedecin(medecinOpt.get());
         } else {
             consultation.setMedecin(existing.getMedecin());
         }
 
-        if (dossierMedicalId != null) {
-            Optional<DossierMedical> dossierOpt = dossierMedicalService.findById(dossierMedicalId);
-            if (dossierOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-            consultation.setDossierMedical(dossierOpt.get());
+        if (patientId != null) {
+            Optional<Patient> patientOpt = patientService.findById(patientId);
+            if (patientOpt.isEmpty()) return ResponseEntity.notFound().build();
+            consultation.setPatient(patientOpt.get());
         } else {
-            consultation.setDossierMedical(existing.getDossierMedical());
+            consultation.setPatient(existing.getPatient());
         }
 
         return ResponseEntity.ok(consultationService.save(consultation));
@@ -155,5 +147,15 @@ public class ConsultationController {
         }
         consultationService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/patient/email")
+    public ResponseEntity<List<Consultation>> getConsultationsByPatientEmail(@RequestParam String email) {
+        Optional<Patient> patientOpt = patientService.findByEmail(email);
+        if (patientOpt.isPresent()) {
+            return ResponseEntity.ok(consultationService.findByPatient(patientOpt.get()));
+        } else {
+            return ResponseEntity.ok(List.of());
+        }
     }
 }

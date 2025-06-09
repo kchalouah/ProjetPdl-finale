@@ -4,7 +4,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const id = params.id
 
-    const response = await fetch(`http://localhost:8080/api/ordonnance/supprimerordonnance/${id}`, {
+    const response = await fetch(`http://localhost:8080/api/ordonnances/supprimerordonnance/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

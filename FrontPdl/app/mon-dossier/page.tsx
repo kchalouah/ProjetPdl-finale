@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, FileText, User, Calendar, Pill } from "lucide-react"
+import { ArrowLeft, FileText, User, Calendar, Pill, Stethoscope } from "lucide-react"
 import Link from "next/link"
 
 interface DossierMedical {
@@ -34,18 +34,29 @@ interface Ordonnance {
   status: string
 }
 
+interface Diagnostic {
+  id: number
+  dateHeure: string
+  description: string
+  medecin: string
+}
+
 export default function MonDossierPage() {
   const [dossier, setDossier] = useState<DossierMedical | null>(null)
   const [consultations, setConsultations] = useState<Consultation[]>([])
   const [ordonnances, setOrdonnances] = useState<Ordonnance[]>([])
+  const [diagnostics, setDiagnostics] = useState<Diagnostic[]>([])
   const [userEmail, setUserEmail] = useState("")
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail") || ""
     setUserEmail(email)
     fetchDossier()
-    fetchConsultations()
-    fetchOrdonnances()
+    if (email) {
+      fetchConsultations(email)
+      fetchOrdonnances(email)
+      fetchDiagnostics(email)
+    }
   }, [])
 
   const fetchDossier = async () => {
@@ -67,50 +78,64 @@ export default function MonDossierPage() {
     }
   }
 
-  const fetchConsultations = async () => {
+  const fetchConsultations = async (email: string) => {
     try {
-      // Simulation de données
-      const mockConsultations: Consultation[] = [
-        {
-          id: 1,
-          dateHeure: "2024-01-20T10:30:00",
-          notes: "Consultation de routine. Patient en bonne santé générale. Tension artérielle normale.",
-          actesRealises: "Examen clinique complet, prise de tension",
-          medecin: "Dr. Dupont - Médecin généraliste",
-        },
-        {
-          id: 2,
-          dateHeure: "2024-01-15T14:15:00",
-          notes: "Suivi analyses biologiques. Résultats dans les normes.",
-          actesRealises: "Interprétation analyses, conseils hygiéno-diététiques",
-          medecin: "Dr. Martin - Cardiologue",
-        },
-      ]
-      setConsultations(mockConsultations)
+      const res = await fetch(`/api/consultations/patient?email=${encodeURIComponent(email)}`)
+      if (!res.ok) throw new Error("Erreur API consultations")
+      const data = await res.json()
+      setConsultations(
+        data.map((c: any) => ({
+          id: c.id,
+          dateHeure: c.dateHeure || c.date_heure,
+          notes: c.notes,
+          actesRealises: c.actesRealises,
+          medecin: c.medecin?.nom || c.medecinNom || "Médecin inconnu",
+        }))
+      )
     } catch (error) {
+      setConsultations([])
       console.error("Erreur lors du chargement des consultations:", error)
     }
   }
 
-  const fetchOrdonnances = async () => {
+  const fetchOrdonnances = async (email: string) => {
     try {
-      // Simulation de données
-      const mockOrdonnances: Ordonnance[] = [
-        {
-          id: 1,
-          dateHeure: "2024-01-20T10:30:00",
-          prescriptions:
-            "Paracétamol 1g - 1 comprimé si douleur (max 3/jour)\nVitamine D 1000 UI - 1 comprimé par jour",
-          dureeTraitement: 30,
-          instructions:
-            "Prendre le paracétamol uniquement en cas de douleur. La vitamine D à prendre le matin avec un verre d'eau.",
-          medecin: "Dr. Dupont",
-          status: "ACTIVE",
-        },
-      ]
-      setOrdonnances(mockOrdonnances)
+      const res = await fetch(`/api/ordonnances/patient?email=${encodeURIComponent(email)}`)
+      if (!res.ok) throw new Error("Erreur API ordonnances")
+      const data = await res.json()
+      setOrdonnances(
+        data.map((o: any) => ({
+          id: o.id,
+          dateHeure: o.dateHeure || o.date_heure,
+          prescriptions: o.prescriptions,
+          dureeTraitement: o.dureeTraitement,
+          instructions: o.instructions,
+          medecin: o.medecin?.nom || o.medecinNom || "Médecin inconnu",
+          status: o.status || "ACTIVE",
+        }))
+      )
     } catch (error) {
+      setOrdonnances([])
       console.error("Erreur lors du chargement des ordonnances:", error)
+    }
+  }
+
+  const fetchDiagnostics = async (email: string) => {
+    try {
+      const res = await fetch(`/api/diagnostics/patient?email=${encodeURIComponent(email)}`)
+      if (!res.ok) throw new Error("Erreur API diagnostics")
+      const data = await res.json()
+      setDiagnostics(
+        data.map((d: any) => ({
+          id: d.id,
+          dateHeure: d.dateHeure || d.date_heure,
+          description: d.description,
+          medecin: d.medecin?.nom || d.medecinNom || "Médecin inconnu",
+        }))
+      )
+    } catch (error) {
+      setDiagnostics([])
+      console.error("Erreur lors du chargement des diagnostics:", error)
     }
   }
 
@@ -163,59 +188,13 @@ export default function MonDossierPage() {
           </CardContent>
         </Card>
 
-        {/* Tabs */}
-        <Tabs defaultValue="antecedents" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="antecedents">Antécédents</TabsTrigger>
-            <TabsTrigger value="examens">Examens</TabsTrigger>
+        {/* Tabs - Only Consultations, Ordonnances, Diagnostics */}
+        <Tabs defaultValue="consultations" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="consultations">Consultations</TabsTrigger>
             <TabsTrigger value="ordonnances">Ordonnances</TabsTrigger>
+            <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
           </TabsList>
-
-          {/* Antécédents Tab */}
-          <TabsContent value="antecedents">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Antécédents Médicaux
-                </CardTitle>
-                <CardDescription>Historique médical et allergies</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="whitespace-pre-wrap text-sm">
-                  {dossier.antecedentsMedicaux || "Aucun antécédent médical renseigné"}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Examens Tab */}
-          <TabsContent value="examens" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Résultats Biologiques</CardTitle>
-                <CardDescription>Analyses de sang et autres examens biologiques</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="whitespace-pre-wrap text-sm">
-                  {dossier.resultatsBiologiques || "Aucun résultat biologique disponible"}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Résultats Radiologiques</CardTitle>
-                <CardDescription>Imagerie médicale et examens radiologiques</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="whitespace-pre-wrap text-sm">
-                  {dossier.resultatsRadiologiques || "Aucun résultat radiologique disponible"}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Consultations Tab */}
           <TabsContent value="consultations">
@@ -309,6 +288,43 @@ export default function MonDossierPage() {
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">Aucune ordonnance disponible</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Diagnostics Tab */}
+          <TabsContent value="diagnostics">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Stethoscope className="h-5 w-5" />
+                  Mes Diagnostics ({diagnostics.length})
+                </CardTitle>
+                <CardDescription>Résultats et analyses diagnostiques</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {diagnostics.length > 0 ? (
+                  <div className="space-y-4">
+                    {diagnostics.map((diag) => (
+                      <Card key={diag.id} className="border-l-4 border-l-yellow-500">
+                        <CardContent className="pt-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <Badge variant="outline">{formatDateTime(diag.dateHeure)}</Badge>
+                            <span className="text-sm text-gray-500">{diag.medecin}</span>
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-1">Description</h4>
+                            <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                              {diag.description}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Aucun diagnostic disponible</p>
                 )}
               </CardContent>
             </Card>

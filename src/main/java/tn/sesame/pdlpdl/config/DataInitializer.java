@@ -279,18 +279,16 @@ public class DataInitializer {
 
             // Création des ordonnances
             Ordonnance ordonnance1 = Ordonnance.builder()
-                    .dateHeure(new Date())
-                    .prescriptions("Aspirine 100mg 1cp/jour\nBêta-bloquant 5mg 1cp matin et soir")
-                    .dureeTraitement(30)
+                    .datePrescription(new Date())
+                    .medicaments("Aspirine 100mg 1cp/jour\nBêta-bloquant 5mg 1cp matin et soir")
                     .instructions("Prendre après les repas")
                     .consultation(consultation1)
                     .build();
             ordonnanceRepository.save(ordonnance1);
 
             Ordonnance ordonnance2 = Ordonnance.builder()
-                    .dateHeure(new Date(System.currentTimeMillis() - 604800000)) // -1 semaine
-                    .prescriptions("Ventoline 2 bouffées en cas de crise\nCorticoïde inhalé 2 bouffées matin et soir")
-                    .dureeTraitement(90)
+                    .datePrescription(new Date(System.currentTimeMillis() - 604800000)) // -1 semaine
+                    .medicaments("Ventoline 2 bouffées en cas de crise\nCorticoïde inhalé 2 bouffées matin et soir")
                     .instructions("Rincer la bouche après utilisation du corticoïde")
                     .consultation(consultation2)
                     .build();

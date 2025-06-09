@@ -22,14 +22,14 @@ public class Diagnostic {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Date dateHeure;
-
     @Column(nullable = false, length = 2000)
     private String description;
 
     @Column(length = 2000)
     private String recommandations;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dateHeure;
 
     @ManyToOne
     @JoinColumn(name = "consultation_id", nullable = false)

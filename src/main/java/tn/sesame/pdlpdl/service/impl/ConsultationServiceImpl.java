@@ -3,8 +3,8 @@ package tn.sesame.pdlpdl.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.sesame.pdlpdl.model.entities.Consultation;
-import tn.sesame.pdlpdl.model.entities.DossierMedical;
 import tn.sesame.pdlpdl.model.entities.Medecin;
+import tn.sesame.pdlpdl.model.entities.Patient;
 import tn.sesame.pdlpdl.repository.ConsultationRepository;
 import tn.sesame.pdlpdl.service.IConsultationService;
 
@@ -12,9 +12,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Implémentation du service de gestion des consultations médicales.
- */
 @Service
 public class ConsultationServiceImpl implements IConsultationService {
 
@@ -51,13 +48,18 @@ public class ConsultationServiceImpl implements IConsultationService {
     }
 
     @Override
-    public List<Consultation> findByDossierMedical(DossierMedical dossierMedical) {
-        return consultationRepository.findByDossierMedical(dossierMedical);
+    public List<Consultation> findByMedecin(Medecin medecin) {
+        return consultationRepository.findByMedecin(medecin);
     }
 
     @Override
-    public List<Consultation> findByMedecin(Medecin medecin) {
-        return consultationRepository.findByMedecin(medecin);
+    public List<Consultation> findByPatient(Patient patient) {
+        return consultationRepository.findByPatient(patient);
+    }
+
+    @Override
+    public List<Consultation> findByMedecinAndPatient(Medecin medecin, Patient patient) {
+        return consultationRepository.findByMedecinAndPatient(medecin, patient);
     }
 
     @Override
@@ -68,10 +70,5 @@ public class ConsultationServiceImpl implements IConsultationService {
     @Override
     public List<Consultation> findByDateHeureBetween(Date debut, Date fin) {
         return consultationRepository.findByDateHeureBetween(debut, fin);
-    }
-
-    @Override
-    public List<Consultation> findByMedecinAndDossierMedical(Medecin medecin, DossierMedical dossierMedical) {
-        return consultationRepository.findByMedecinAndDossierMedical(medecin, dossierMedical);
     }
 }

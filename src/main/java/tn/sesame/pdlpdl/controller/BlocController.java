@@ -59,17 +59,20 @@ public class BlocController {
 
     // POST: Ajouter un bloc
     @PostMapping("/ajouterbloc")
-    public ResponseEntity<Bloc> createBloc(@RequestBody Bloc bloc, @RequestParam Long serviceId) {
+    public ResponseEntity<?> createBloc(@RequestBody Bloc bloc, @RequestParam Long serviceId) {
+        if (bloc.getNumero() == null || bloc.getNumero().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Le champ 'numero' du bloc est requis.");
+        }
         return serviceService.findById(serviceId)
                 .map(service -> {
                     if (blocService.existsByNumeroAndService(bloc.getNumero(), service)) {
-                        return ResponseEntity.status(HttpStatus.CONFLICT).<Bloc>build();
+                        return ResponseEntity.status(HttpStatus.CONFLICT).body("Un bloc avec ce numéro existe déjà pour ce service.");
                     }
                     bloc.setService(service);
                     Bloc savedBloc = blocService.save(bloc);
                     return ResponseEntity.status(HttpStatus.CREATED).body(savedBloc);
                 })
-                .orElse(ResponseEntity.notFound().<Bloc>build());
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service non trouvé."));
     }
 
     // PUT: Modifier un bloc

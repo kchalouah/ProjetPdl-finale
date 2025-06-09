@@ -35,3 +35,5 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// API route is correct and matches the backend controller

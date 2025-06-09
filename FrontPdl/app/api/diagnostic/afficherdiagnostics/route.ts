@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,16 +8,21 @@ export async function GET(request: NextRequest) {
         "Content-Type": "application/json",
       },
       cache: "no-store",
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`)
+      throw new Error(`Error: ${response.status}`);
     }
 
-    const data = await response.json()
-    return NextResponse.json(data)
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching diagnostics:", error)
-    return NextResponse.json({ message: "Erreur lors de la récupération des diagnostics" }, { status: 500 })
+    console.error("Error fetching diagnostics:", error);
+    return NextResponse.json(
+      { message: "Erreur lors de la récupération des diagnostics" },
+      { status: 500 }
+    );
   }
 }
+
+// API is correct, no changes needed

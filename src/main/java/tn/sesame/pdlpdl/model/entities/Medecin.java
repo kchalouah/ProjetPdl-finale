@@ -28,4 +28,5 @@ public class Medecin extends Utilisateur {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SpecialiteEnum specialite;
+
 }
