@@ -1,32 +1,34 @@
 import { NextResponse } from "next/server"
 
-// Données simulées pour les services
-const services = [
-  {
-    id: 1,
-    nom: "Cardiologie",
-    description: "Service spécialisé dans les maladies cardiovasculaires"
-  },
-  {
-    id: 2,
-    nom: "Pédiatrie",
-    description: "Service dédié aux soins des enfants"
-  },
-  {
-    id: 3,
-    nom: "Neurologie",
-    description: "Service spécialisé dans les troubles du système nerveux"
-  },
-  {
-    id: 4,
-    nom: "Dermatologie",
-    description: "Service traitant les affections de la peau"
-  }
-]
-
 export async function GET() {
-  // Simuler un délai réseau
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  return NextResponse.json(services)
+  try {
+    const response = await fetch("http://localhost:8080/api/service/afficherservices", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      signal: AbortSignal.timeout(10000),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Backend error: ${response.status} - ${errorText}`)
+      return NextResponse.json(
+        { error: `Erreur backend: ${response.status} - ${errorText}` },
+        { status: response.status },
+      )
+    }
+
+    const services = await response.json()
+    return NextResponse.json(services)
+  } catch (error) {
+    console.error("Erreur de connexion au backend:", error)
+    return NextResponse.json(
+      {
+        error:
+          "Impossible de se connecter au serveur backend. Vérifiez que le serveur Spring Boot est démarré sur le port 8080.",
+      },
+      { status: 503 },
+    )
+  }
 }

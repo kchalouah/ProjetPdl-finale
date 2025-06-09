@@ -1,71 +1,37 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-
-// Simuler une base de données d'hospitalisations
-let hospitalisations = [
-  {
-    id: 1,
-    patientId: 1,
-    serviceId: 1,
-    dateAdmission: "2023-05-15",
-    dateSortie: "2023-05-20",
-    chambre: "101"
-  },
-  {
-    id: 2,
-    patientId: 2,
-    serviceId: 2,
-    dateAdmission: "2023-06-10",
-    dateSortie: null,
-    chambre: "201"
-  }
-]
+import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    // Récupérer les données de la requête
-    const data = await request.json()
-    
-    // Validation des données
-    if (!data.patientId || !data.serviceId || !data.dateAdmission) {
+    const hospitalisationData = await request.json()
+
+    const response = await fetch("http://localhost:8080/api/hospitalisation/ajouterhospitalisation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(hospitalisationData),
+      signal: AbortSignal.timeout(10000),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Backend error: ${response.status} - ${errorText}`)
       return NextResponse.json(
-        { 
-          success: false, 
-          message: "Données incomplètes. Patient, service et date d'admission sont requis." 
-        }, 
-        { status: 400 }
+        { error: `Erreur backend: ${response.status} - ${errorText}` },
+        { status: response.status },
       )
     }
-    
-    // Créer une nouvelle hospitalisation
-    const newHospitalisation = {
-      id: hospitalisations.length + 1,
-      patientId: data.patientId,
-      serviceId: data.serviceId,
-      dateAdmission: data.dateAdmission,
-      dateSortie: data.dateSortie || null,
-      chambre: Math.floor(Math.random() * 5 + 1) + "0" + Math.floor(Math.random() * 5 + 1) // Chambre aléatoire
-    }
-    
-    // Ajouter à notre "base de données"
-    hospitalisations.push(newHospitalisation)
-    
-    // Simuler un délai réseau
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: "Hospitalisation créée avec succès", 
-      hospitalisation: newHospitalisation 
-    })
+
+    const result = await response.json()
+    return NextResponse.json(result, { status: 201 })
   } catch (error) {
-    console.error("Erreur lors de la création de l'hospitalisation:", error)
+    console.error("Erreur de connexion au backend:", error)
     return NextResponse.json(
-      { 
-        success: false, 
-        message: "Erreur lors de la création de l'hospitalisation" 
-      }, 
-      { status: 500 }
+      {
+        error:
+          "Impossible de se connecter au serveur backend. Vérifiez que le serveur Spring Boot est démarré sur le port 8080.",
+      },
+      { status: 503 },
     )
   }
 }

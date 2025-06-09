@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Edit, Trash2, Calendar, Pill } from "lucide-react"
+import Link from "next/link"
+import { Plus, Search, Edit, Trash2, Calendar, Pill, ArrowLeft } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface Ordonnance {
@@ -90,9 +91,9 @@ export default function OrdonnancesPage() {
     let filtered = ordonnances
     if (searchTerm) {
       filtered = filtered.filter(
-          (ordonnance) =>
-              ordonnance.medicaments.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              ordonnance.instructions.toLowerCase().includes(searchTerm.toLowerCase()),
+        (ordonnance) =>
+          ordonnance.medicaments.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ordonnance.instructions.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
     setFilteredOrdonnances(filtered)
@@ -114,14 +115,14 @@ export default function OrdonnancesPage() {
       }
 
       const response = await fetch(
-          editingOrdonnance
-              ? `/api/ordonnances/modifierordonnance/${editingOrdonnance.id}`
-              : "/api/ordonnances/ajouterordonnance",
-          {
-            method: editingOrdonnance ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(ordonnanceData),
-          },
+        editingOrdonnance
+          ? `/api/ordonnances/modifierordonnance/${editingOrdonnance.id}`
+          : "/api/ordonnances/ajouterordonnance",
+        {
+          method: editingOrdonnance ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(ordonnanceData),
+        },
       )
 
       if (!response.ok) throw new Error("Erreur lors de la sauvegarde")
@@ -177,169 +178,177 @@ export default function OrdonnancesPage() {
   }
 
   return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Link>
+          </Button>
           <div>
             <h1 className="text-3xl font-bold">Ordonnances</h1>
             <p className="text-muted-foreground">Gérer les prescriptions médicales</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreateDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Nouvelle Ordonnance
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>{editingOrdonnance ? "Modifier l'ordonnance" : "Nouvelle ordonnance"}</DialogTitle>
-                <DialogDescription>
-                  {editingOrdonnance
-                      ? "Modifiez les informations de l'ordonnance"
-                      : "Créez une nouvelle prescription médicale"}
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="consultation">Consultation</Label>
-                  <Select
-                      value={formData.consultation_id}
-                      onValueChange={(value) => setFormData({ ...formData, consultation_id: value })}
-                      disabled={!!editingOrdonnance}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une consultation" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {consultations.map((consultation) => (
-                          <SelectItem key={consultation.id} value={consultation.id.toString()}>
-                            Consultation #{consultation.id} - Patient #{consultation.patient_id} -{" "}
-                            {consultation.date_consultation}
-                          </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="medicaments">Médicaments</Label>
-                  <Textarea
-                      id="medicaments"
-                      placeholder="Liste des médicaments prescrits..."
-                      value={formData.medicaments}
-                      onChange={(e) => setFormData({ ...formData, medicaments: e.target.value })}
-                      rows={3}
-                      required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="instructions">Instructions</Label>
-                  <Textarea
-                      id="instructions"
-                      placeholder="Instructions de prise et posologie..."
-                      value={formData.instructions}
-                      onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                      rows={4}
-                      required
-                  />
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Sauvegarde..." : editingOrdonnance ? "Modifier" : "Créer"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
-
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Liste des ordonnances</CardTitle>
-                <CardDescription>{filteredOrdonnances.length} ordonnance(s) trouvée(s)</CardDescription>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openCreateDialog}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouvelle Ordonnance
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>{editingOrdonnance ? "Modifier l'ordonnance" : "Nouvelle ordonnance"}</DialogTitle>
+              <DialogDescription>
+                {editingOrdonnance
+                  ? "Modifiez les informations de l'ordonnance"
+                  : "Créez une nouvelle prescription médicale"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="consultation">Consultation</Label>
+                <Select
+                  value={formData.consultation_id}
+                  onValueChange={(value) => setFormData({ ...formData, consultation_id: value })}
+                  disabled={!!editingOrdonnance}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une consultation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {consultations.map((consultation) => (
+                      <SelectItem key={consultation.id} value={consultation.id.toString()}>
+                        Consultation #{consultation.id} - Patient #{consultation.patient_id} -{" "}
+                        {consultation.date_consultation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex items-center space-x-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Rechercher..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-64"
+              <div className="space-y-2">
+                <Label htmlFor="medicaments">Médicaments</Label>
+                <Textarea
+                  id="medicaments"
+                  placeholder="Liste des médicaments prescrits..."
+                  value={formData.medicaments}
+                  onChange={(e) => setFormData({ ...formData, medicaments: e.target.value })}
+                  rows={3}
+                  required
                 />
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Consultation</TableHead>
-                  <TableHead>Médicaments</TableHead>
-                  <TableHead>Instructions</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8">
-                        Chargement...
-                      </TableCell>
-                    </TableRow>
-                ) : filteredOrdonnances.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Aucune ordonnance trouvée
-                      </TableCell>
-                    </TableRow>
-                ) : (
-                    filteredOrdonnances.map((ordonnance) => (
-                        <TableRow key={ordonnance.id}>
-                          <TableCell className="font-medium">#{ordonnance.id}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">Consultation #{ordonnance.consultation_id}</Badge>
-                          </TableCell>
-                          <TableCell className="max-w-xs">
-                            <div className="flex items-start">
-                              <Pill className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                              <span className="truncate">{ordonnance.medicaments}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate">{ordonnance.instructions}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {new Date(ordonnance.date_prescription).toLocaleDateString("fr-FR")}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end space-x-2">
-                              <Button variant="outline" size="sm" onClick={() => handleEdit(ordonnance)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDelete(ordonnance.id)}
-                                  className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                    ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label htmlFor="instructions">Instructions</Label>
+                <Textarea
+                  id="instructions"
+                  placeholder="Instructions de prise et posologie..."
+                  value={formData.instructions}
+                  onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                  rows={4}
+                  required
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Sauvegarde..." : editingOrdonnance ? "Modifier" : "Créer"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Liste des ordonnances</CardTitle>
+              <CardDescription>{filteredOrdonnances.length} ordonnance(s) trouvée(s)</CardDescription>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Consultation</TableHead>
+                <TableHead>Médicaments</TableHead>
+                <TableHead>Instructions</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Chargement...
+                  </TableCell>
+                </TableRow>
+              ) : filteredOrdonnances.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Aucune ordonnance trouvée
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredOrdonnances.map((ordonnance) => (
+                  <TableRow key={ordonnance.id}>
+                    <TableCell className="font-medium">#{ordonnance.id}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">Consultation #{ordonnance.consultation_id}</Badge>
+                    </TableCell>
+                    <TableCell className="max-w-xs">
+                      <div className="flex items-start">
+                        <Pill className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <span className="truncate">{ordonnance.medicaments}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">{ordonnance.instructions}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {new Date(ordonnance.date_prescription).toLocaleDateString("fr-FR")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(ordonnance)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(ordonnance.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

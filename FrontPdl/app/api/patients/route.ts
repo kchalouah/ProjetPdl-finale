@@ -1,48 +1,34 @@
 import { NextResponse } from "next/server"
 
-// Données simulées pour les patients
-const patients = [
-  {
-    id: 1,
-    nom: "Durand",
-    prenom: "Robert",
-    email: "robert.durand@email.com",
-    dateNaissance: "1970-06-15",
-    adresse: "123 Rue de Paris, 75001 Paris",
-    telephone: "0123456789"
-  },
-  {
-    id: 2,
-    nom: "Moreau",
-    prenom: "Julie",
-    email: "julie.moreau@email.com",
-    dateNaissance: "1985-10-22",
-    adresse: "456 Avenue Victor Hugo, 69002 Lyon",
-    telephone: "0987654321"
-  },
-  {
-    id: 3,
-    nom: "Petit",
-    prenom: "Thomas",
-    email: "thomas.petit@email.com",
-    dateNaissance: "1990-03-10",
-    adresse: "789 Boulevard Gambetta, 59000 Lille",
-    telephone: "0654321987"
-  },
-  {
-    id: 4,
-    nom: "Martin",
-    prenom: "Sophie",
-    email: "sophie.martin@email.com",
-    dateNaissance: "1982-12-05",
-    adresse: "321 Rue de la République, 13001 Marseille",
-    telephone: "0712345678"
-  }
-]
-
 export async function GET() {
-  // Simuler un délai réseau
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  return NextResponse.json(patients)
+  try {
+    const response = await fetch("http://localhost:8080/api/patients/tous", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      signal: AbortSignal.timeout(10000),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Backend error: ${response.status} - ${errorText}`)
+      return NextResponse.json(
+        { error: `Erreur backend: ${response.status} - ${errorText}` },
+        { status: response.status },
+      )
+    }
+
+    const patients = await response.json()
+    return NextResponse.json(patients)
+  } catch (error) {
+    console.error("Erreur de connexion au backend:", error)
+    return NextResponse.json(
+      {
+        error:
+          "Impossible de se connecter au serveur backend. Vérifiez que le serveur Spring Boot est démarré sur le port 8080.",
+      },
+      { status: 503 },
+    )
+  }
 }

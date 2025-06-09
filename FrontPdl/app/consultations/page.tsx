@@ -80,7 +80,6 @@ export default function ConsultationsPage() {
   const fetchConsultations = async () => {
     try {
       setLoading(true)
-      // ✅ CORRECTION: Endpoint correct du backend
       const response = await fetch("/api/consultations/lister")
       if (!response.ok) {
         throw new Error("Erreur lors du chargement des consultations")
