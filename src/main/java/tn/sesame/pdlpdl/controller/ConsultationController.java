@@ -93,6 +93,8 @@ public class ConsultationController {
         Optional<Medecin> medecinOpt = medecinService.findById(medecinId);
         Optional<Patient> patientOpt = patientService.findById(patientId);
 
+        var x = medecinOpt.isPresent();
+        var y = patientOpt.isPresent();
         if (medecinOpt.isPresent() && patientOpt.isPresent()) {
             consultation.setMedecin(medecinOpt.get());
             consultation.setPatient(patientOpt.get());
